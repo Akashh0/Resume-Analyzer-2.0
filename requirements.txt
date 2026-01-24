@@ -1,0 +1,7 @@
+streamlit
+pdfplumber
+sentence-transformers
+scikit-learn
+huggingface_hub
+python-dotenv
+torch
