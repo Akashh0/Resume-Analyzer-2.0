@@ -27,53 +27,97 @@ st.markdown("""
 
 # --- 3. HELPER FUNCTIONS ---
 
-def generate_strong_jd(is_fresher, years_of_exp=0):
-    """Generates a specific Job Description based on user profile."""
-    if is_fresher:
-        role_title = "Junior AI Application Engineer / Graduate Trainee"
-        exp_req = "0-1 Years (Projects & Internships valued)"
-        key_focus = "Translating academic projects into production code. Learning agility & basic stack proficiency."
-        advice = "**Why this fits:** Your profile highlights potential. Focus on showcasing your GitHub projects."
-    else:
-        if years_of_exp < 3:
-            role_title = "AI Application Engineer (Mid-Level)"
-        else:
-            role_title = "Senior Full-Stack Data Scientist"
-        exp_req = f"{years_of_exp}+ Years of Industry Experience"
-        key_focus = "System architecture, scalability, and deploying models to production under load."
-        advice = "**Gap Analysis:** Ensure your 'Work Experience' section is detailed with metrics (e.g., 'Improved latency by 20%')."
-
-    return role_title, exp_req, key_focus, advice
+def generate_strong_jd(resume_text, status):
+    """
+    Dynamically analyzes the resume to suggest the perfect Job Title and Focus Area.
+    """
+    prompt = f"""
+    Role: Senior Career Coach.
+    Task: Analyze the resume and determine the BEST Job Title and Career Focus for this candidate.
+    
+    Candidate Status: {status}
+    Resume Snippet:
+    {resume_text[:2500]}
+    
+    Output strictly in this format (3 lines only):
+    Title: [Recommended Job Title]
+    Focus: [1 sentence on what they should emphasize, e.g., "Focus on backend scalability..."]
+    Advice: [1 short tip, e.g., "Highlight your Python projects more."]
+    """
+    
+    try:
+        response = client.chat_completion(
+            messages=[{"role": "user", "content": prompt}], 
+            max_tokens=150, 
+            stream=False
+        )
+        content = response.choices[0].message.content.strip()
+        
+        # Simple parsing to extract the 3 lines
+        lines = content.split('\n')
+        title = "AI Application Engineer" # Fallback
+        focus = "Building robust AI systems."
+        advice = "Focus on projects."
+        
+        for line in lines:
+            if line.startswith("Title:"):
+                title = line.replace("Title:", "").strip()
+            elif line.startswith("Focus:"):
+                focus = line.replace("Focus:", "").strip()
+            elif line.startswith("Advice:"):
+                advice = line.replace("Advice:", "").strip()
+                
+        return title, focus, advice
+        
+    except Exception as e:
+        return "Software Engineer", "General Development", "Focus on basics."
 
 def get_ai_advice(resume_text, job_text, is_fresher, years_exp):
     profile_context = "Fresher/Student" if is_fresher else f"Experienced Professional ({years_exp} years)"
     
     prompt = f"""
-    Role: Senior Technical Recruiter.
-    Task: Perform a balanced review of the Resume against the Job Description.
+    Role: Expert Resume Auditor & Technical Recruiter.
+    Task: Provide a detailed, deep-dive assessment of the candidate based on the Resume and Job Description.
     Candidate Profile: {profile_context}
     
-    Output Format (Strictly follow this Markdown structure):
+    CRITICAL INSTRUCTION: Output strictly using the headers below. Ensure every point is detailed and specific.
     
-    ### ✅ Strong Matches
-    1. **[Strength]**: [Brief explanation of why this fits the JD]
-    2. **[Strength]**: [Brief explanation of why this fits the JD]
-    3. **[Strength]**: [Brief explanation of why this fits the JD]
+    ### 🎯 Strong Matches
+    1. **[Strength 1]**: [Detailed explanation of how this specific skill/experience matches the JD]
+    2. **[Strength 2]**: [Detailed explanation matching specific keywords or projects]
+    3. **[Strength 3]**: [Detailed explanation regarding tool/tech proficiency]
+    4. **[Strength 4]**: [Detailed explanation regarding soft skills or methodology]
+    5. **[Strength 5]**: [Detailed explanation regarding education or background fit]
     
-    ---
+    ### ⚠️ Weakness in the Profile
+    1. **[Weakness 1]**: [Detailed explanation of a missing critical skill or experience]
+    2. **[Weakness 2]**: [Detailed explanation of a gap in tools or technologies]
+    3. **[Weakness 3]**: [Detailed explanation regarding depth of knowledge or ambiguity]
+    4. **[Weakness 4]**: [Detailed explanation regarding formatting or presentation issues]
+    5. **[Weakness 5]**: [Detailed explanation regarding missing metrics or impact statements]
     
-    ### ⚠️ Critical Gaps & Recommendations
-    1. **[Weakness]**: [Actionable Fix]
-    2. **[Weakness]**: [Actionable Fix]
-    3. **[Weakness]**: [Actionable Fix]
+    ### 📝 Context
+    * [Detailed insight 1: Overall fit assessment relative to the market standard]
+    * [Detailed insight 2: Observations on the candidate's career trajectory vs JD requirements]
+    * [Detailed insight 3: Analysis of the specific domain/industry alignment]
+    * [Detailed insight 4: Comment on the "tone" and professionalism of the resume]
     
-    Context:
-    Resume: {resume_text[:3000]}
-    Job: {job_text[:3000]}
+    ### 💡 Recommendation
+    * [Action Item 1: Specific technical project or certification to add]
+    * [Action Item 2: Specific resume section to rewrite or restructure]
+    * [Action Item 3: Strategy for the interview phase based on these gaps]
+    * [Action Item 4: Final strategic advice on positioning for this role]
+    
+    Resume Content: {resume_text[:4000]}
+    Job Description: {job_text[:4000]}
     """
     
     try:
-        response = client.chat_completion(messages=[{"role": "user", "content": prompt}], max_tokens=600, stream=False)
+        response = client.chat_completion(
+            messages=[{"role": "user", "content": prompt}], 
+            max_tokens=1000,  # Increased to accommodate detailed response
+            stream=False
+        )
         return response.choices[0].message.content
     except Exception as e:
         return f"Error: {e}"
@@ -153,27 +197,36 @@ if uploaded_file is not None and job_description:
     with col3:
         word_count = len(cleaned_resume_text.split())
         st.metric(label="Resume Length", value=f"{word_count} Words", delta="Optimal Range" if 400 < word_count < 1000 else "Check Length", delta_color="off")
-    style_metric_cards(background_color="#000000", border_left_color="#4F8BF9") # White bg for cleaner look
+    style_metric_cards(background_color="#000000", border_left_color="#FFFFFF") 
 
     st.divider()
 
     # --- ROW 2: DYNAMIC TARGET ROLE (NEW LOGIC) ---
     st.subheader("🎯 Targeted Role Analysis")
     
-    is_fresher = (status == "Fresher / Student")
-    role_title, exp_req, key_focus, role_advice = generate_strong_jd(is_fresher, years_exp)
+    # Check if we already have the role generated in session state (to save API calls)
+    if 'dynamic_role' not in st.session_state:
+        st.session_state['dynamic_role'] = None
+
+    # Auto-run this analysis once the file is uploaded
+    if st.session_state['dynamic_role'] is None:
+        with st.spinner("AI is identifying your best role fit..."):
+            role_title, key_focus, role_advice = generate_strong_jd(cleaned_resume_text, status)
+            st.session_state['dynamic_role'] = (role_title, key_focus, role_advice)
+
+    # Display results
+    d_title, d_focus, d_advice = st.session_state['dynamic_role']
     
     role_col1, role_col2 = st.columns([2, 1])
     
     with role_col1:
         st.markdown(f"""
-        ### **{role_title}**
-        **Expectation:** {exp_req}  
-        **Key Focus:** {key_focus}
+        ### **{d_title}**
+        **Career Focus:** {d_focus}
         """)
     
     with role_col2:
-        st.info(role_advice)
+        st.info(f"💡 **AI Tip:** {d_advice}")
 
     st.divider()
 
@@ -195,7 +248,7 @@ if uploaded_file is not None and job_description:
         
         with q_col1:
             st.markdown("#### 1️⃣ Experience Verification")
-            # These are now clickable as requested
+            is_fresher = (status == "Fresher / Student")
             st.checkbox(f"Confirms {status} Status?", value=True)
             if not is_fresher:
                 st.checkbox(f"Has {years_exp}+ Years relevant experience?", value=True)
@@ -220,8 +273,12 @@ if uploaded_file is not None and job_description:
     with st.expander("✨ View Detailed Improvement Plan", expanded=False):
         if st.button("Analyze Gaps with Zephyr-7B"):
             with st.spinner("Consulting AI..."):
+                is_fresher = (status == "Fresher / Student")
                 advice = get_ai_advice(cleaned_resume_text, cleaned_job_desc, is_fresher, years_exp)
                 st.markdown(advice)
 
 else:
+    # Clear session state if file is removed
+    if 'dynamic_role' in st.session_state:
+        del st.session_state['dynamic_role']
     st.info("👈 Please upload a Resume and Job Description in the sidebar to begin.")
