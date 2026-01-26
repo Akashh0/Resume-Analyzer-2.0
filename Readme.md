@@ -58,7 +58,7 @@ Follow these steps to run the project locally.
 
 ### Step 1: Clone the Repository
 ```bash
-git clone [https://github.com/yourusername/resume-architect-ai.git](https://github.com/yourusername/resume-architect-ai.git)
+git clone (https://github.com/Akashh0/Resume-Analyzer-2.0.git)
 cd resume-architect-ai
 ```
 
