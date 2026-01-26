@@ -101,31 +101,48 @@ def get_ai_advice(resume_text, job_text, is_fresher, years_exp):
 
 def generate_application_email(resume_text, job_text, type="Cover Letter"):
     """Generates a tailored Cover Letter or Cold Email."""
+    
+    # 1. Cleaner Prompt to stop hallucinating "Alternatively"
     prompt = f"""
     Role: Professional Career Coach.
-    Task: Write a highly persuasive {type} for this candidate.
+    Task: Write a complete, professional {type} for this candidate.
     
-    Instructions:
-    - If "Cover Letter": Standard formal structure, 3 paragraphs.
-    - If "Cold Email": Short, punchy, 150 words max. Focus on value proposition.
-    - Use the Resume to prove skills mentioned in the Job Description.
-    - Tone: Professional, Confident, but not arrogant.
+    CRITICAL RULES:
+    1. Do NOT output headers like "Alternatively" or multiple options. Write ONE single, polished draft.
+    2. Start directly with "Dear Hiring Manager," or "Hi [Name],".
+    3. Use the Resume to prove skills mentioned in the Job Description.
+    4. Keep it human, confident, and specific.
     
-    Resume: {resume_text[:3000]}
-    Job: {job_text[:3000]}
+    Resume Context:
+    {resume_text[:3000]}
+    
+    Job Description:
+    {job_text[:3000]}
     """
+    
     try:
-        response = client.chat_completion(messages=[{"role": "user", "content": prompt}], max_tokens=600, stream=False)
+        response = client.chat_completion(
+            messages=[{"role": "user", "content": prompt}], 
+            max_tokens=800,  # <-- INCREASED from 600 to 800
+            stream=False
+        )
         return response.choices[0].message.content
     except Exception as e:
         return f"Error: {e}"
 
 def get_interview_questions(resume_text, job_text):
     prompt = f"""
-    Role: Strict Recruiter.
-    Task: Create 3 'Yes/No' interview questions based on MISSING skills.
-    Constraint: Start with "Do you...", "Have you...".
-    Context:
+    Role: Interviewer.
+    Task: Create 3 strict YES/NO screening questions based on missing skills.
+    
+    RULES:
+    1. Output ONLY the questions. No intro text.
+    2. EVERY question must start with "Do you have..." or "Have you used...".
+    3. Do NOT ask "How familiar..." or "Can you describe...".
+    
+    Bad Example: "How familiar are you with Python?"
+    Good Example: "Do you have professional experience with Python?"
+    
     Resume: {resume_text[:2000]}
     Job: {job_text[:2000]}
     """
@@ -181,7 +198,7 @@ if uploaded_file is not None and job_description:
         elif match_score >= 50: st.metric(label="Status", value="Moderate", delta="- Needs Optimization", delta_color="inverse")
         else: st.metric(label="Status", value="Weak Match", delta="- Critical Gaps", delta_color="inverse")
     with col3: st.metric(label="Word Count", value=f"{len(cleaned_resume_text.split())} Words")
-    style_metric_cards(background_color="#FFFFFF", border_left_color="#4F8BF9") 
+    style_metric_cards(background_color="#000000", border_left_color="#4F8BF9") 
 
     st.divider()
 
