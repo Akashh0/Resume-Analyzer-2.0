@@ -97,6 +97,7 @@ resume-architect-ai/
 ├── .env                  # API keys (Not uploaded to GitHub)
 ├── .gitignore            # Files to ignore (venv, .env, etc.)
 └── README.md             # Project documentation
+└── test-setup.py         # checking if model works in your local system.
 ```
 
 ## Future Improvements
