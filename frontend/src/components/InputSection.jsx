@@ -16,7 +16,7 @@ function InputSection({
         <label className="text-[10px] font-mono tracking-widest text-zinc-500 uppercase mb-4">Target Role Description</label>
         <textarea
           className="w-full h-32 bg-transparent resize-none outline-none text-zinc-300 placeholder:text-zinc-800 font-light leading-relaxed border-b border-zinc-900 focus:border-cyan-500 transition-colors"
-          placeholder="We are seeking a Full-Stack Software Engineer with <number> years of experience in React, Node.js, and PostgreSQL to architect scalable APIs and build responsive web interfaces."
+          placeholder="Eg. We are seeking a Full-Stack Software Engineer with <number> years of experience in React, Node.js, and PostgreSQL to architect scalable APIs and build responsive web interfaces."
           value={jobDescription}
           onChange={(e) => setJobDescription(e.target.value)}
         ></textarea>
