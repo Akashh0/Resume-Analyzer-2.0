@@ -1,8 +1,8 @@
-streamlit
-pdfplumber
+fastapi
+uvicorn
+python-multipart
+huggingface_hub
 sentence-transformers
 scikit-learn
-huggingface_hub
 python-dotenv
-streamlit-extras
-torch
+pdfplumber

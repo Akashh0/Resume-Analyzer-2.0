@@ -11,7 +11,8 @@ app = FastAPI(title="Resume Architect API")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    # Replace the URL below with your actual Netlify link (no trailing slash!)
+    allow_origins=["https://analyseyourresume.netlify.app", "http://localhost:5173"], 
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -21,6 +22,13 @@ app.add_middleware(
 print("Initializing AI Engine... (Loading Sentence Transformers)")
 ai_engine = ResumeAnalyzerAI()
 print("AI Engine Ready!")
+
+@app.get("/")
+async def health_check():
+    """
+    A lightweight endpoint for uptime bots to ping.
+    """
+    return {"status": "awake", "message": "The AI Engine is online."}
 
 @app.post("/api/analyze")
 async def analyze_resume(

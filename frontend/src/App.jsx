@@ -30,7 +30,7 @@ function App() {
     formData.append("resume_file", resumeFile);
 
     try {
-      const response = await fetch("http://127.0.0.1:8000/api/analyze", {
+      const response = await fetch("https://akashh077-resume-analyze.hf.space/api/analyze", {
         method: "POST",
         body: formData,
       });
